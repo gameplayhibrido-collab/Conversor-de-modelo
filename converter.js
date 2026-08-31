@@ -1,96 +1,109 @@
 const fs = require("fs");
 
-const input = "model.geo.json";
-const output = "output/model-geckolib.geo.json";
+
+const inputFile = "model.geo.json";
+const outputFolder = "output";
+const outputFile = `${outputFolder}/model-geckolib.geo.json`;
+
 
 console.log("Iniciando conversão...");
 
+
 try {
 
-    const bedrock = JSON.parse(
-        fs.readFileSync(input, "utf8")
+    // Ler arquivo Bedrock
+    const data = JSON.parse(
+        fs.readFileSync(inputFile, "utf8")
     );
 
 
-    const geometry =
-        bedrock["minecraft:geometry"][0];
+    let geometry;
 
 
-    const gecko = {
+    // Detectar formato Bedrock
+    if (data["minecraft:geometry"]) {
 
-        format_version: "1.12.0",
+        geometry = data["minecraft:geometry"][0];
 
-        "minecraft:geometry": [
-            {
-                description: {
-                    identifier:
-                    geometry.description.identifier,
+    } else {
 
-                    texture_width:
-                    geometry.description.texture_width,
-
-                    texture_height:
-                    geometry.description.texture_height
-                },
-
-                bones: []
-            }
-        ]
-    };
-
-
-    for (const bone of geometry.bones) {
-
-        const newBone = {
-
-            name: bone.name,
-
-            pivot:
-            bone.pivot || [0,0,0]
-
-        };
-
-
-        if (bone.rotation) {
-            newBone.rotation =
-            bone.rotation;
-        }
-
-
-        if (bone.cubes) {
-
-            newBone.cubes =
-            bone.cubes.map(cube => ({
-
-                origin: cube.origin,
-
-                size: cube.size,
-
-                uv: cube.uv
-
-            }));
-
-        }
-
-
-        gecko["minecraft:geometry"][0]
-        .bones.push(newBone);
+        throw new Error(
+            "Formato Bedrock não reconhecido"
+        );
 
     }
 
 
-    fs.mkdirSync("output", {
-        recursive: true
-    });
+    console.log(
+        "Modelo encontrado:",
+        geometry.description.identifier
+    );
 
 
+    // Criar estrutura GeckoLib
+    const geckoModel = {
+
+        format_version: "1.14.0",
+
+        geckolib_format_version: 2,
+
+        "minecraft:geometry": [
+
+            {
+
+                description: {
+
+                    identifier:
+                    geometry.description.identifier,
+
+                    texture_width:
+                    geometry.description.texture_width || 64,
+
+                    texture_height:
+                    geometry.description.texture_height || 64,
+
+                    visible_bounds_width: 2,
+
+                    visible_bounds_height: 2,
+
+                    visible_bounds_offset: [
+                        0,
+                        0,
+                        0
+                    ]
+
+                },
+
+
+                bones: geometry.bones || []
+
+            }
+
+        ]
+
+    };
+
+
+    // Criar output temporário
+    fs.mkdirSync(
+        outputFolder,
+        {
+            recursive: true
+        }
+    );
+
+
+    // Salvar convertido
     fs.writeFileSync(
-        output,
+
+        outputFile,
+
         JSON.stringify(
-            gecko,
+            geckoModel,
             null,
             4
         )
+
     );
 
 
@@ -99,11 +112,18 @@ try {
     );
 
 
-} catch(error) {
+}
+
+catch(error) {
 
     console.error(
-        "Erro:",
+        "Erro na conversão:"
+    );
+
+    console.error(
         error.message
     );
+
+    process.exit(1);
 
 }
