@@ -1,65 +1,96 @@
 const fs = require("fs");
 
-const inputFile = "model.geo.json";
-const outputFile = "output/model-geckolib.geo.json";
-
+const input = "model.geo.json";
+const output = "output/model-geckolib.geo.json";
 
 console.log("Iniciando conversão...");
 
-
 try {
 
-    // Ler o modelo Bedrock
-    const bedrockModel = JSON.parse(
-        fs.readFileSync(inputFile, "utf8")
+    const bedrock = JSON.parse(
+        fs.readFileSync(input, "utf8")
     );
 
 
-    // Pegar a geometria do modelo
     const geometry =
-        bedrockModel["minecraft:geometry"][0];
+        bedrock["minecraft:geometry"][0];
 
 
-    console.log(
-        "Modelo encontrado:",
-        geometry.description.identifier
-    );
-
-
-    // Criar o modelo convertido
-    const geckoModel = {
+    const gecko = {
 
         format_version: "1.12.0",
 
         "minecraft:geometry": [
-
             {
+                description: {
+                    identifier:
+                    geometry.description.identifier,
 
-                description:
-                geometry.description,
+                    texture_width:
+                    geometry.description.texture_width,
 
+                    texture_height:
+                    geometry.description.texture_height
+                },
 
-                bones:
-                geometry.bones
-
+                bones: []
             }
-
         ]
-
     };
 
 
-    // Salvar o resultado
+    for (const bone of geometry.bones) {
+
+        const newBone = {
+
+            name: bone.name,
+
+            pivot:
+            bone.pivot || [0,0,0]
+
+        };
+
+
+        if (bone.rotation) {
+            newBone.rotation =
+            bone.rotation;
+        }
+
+
+        if (bone.cubes) {
+
+            newBone.cubes =
+            bone.cubes.map(cube => ({
+
+                origin: cube.origin,
+
+                size: cube.size,
+
+                uv: cube.uv
+
+            }));
+
+        }
+
+
+        gecko["minecraft:geometry"][0]
+        .bones.push(newBone);
+
+    }
+
+
+    fs.mkdirSync("output", {
+        recursive: true
+    });
+
+
     fs.writeFileSync(
-
-        outputFile,
-
+        output,
         JSON.stringify(
-            geckoModel,
+            gecko,
             null,
             4
         )
-
     );
 
 
@@ -68,12 +99,11 @@ try {
     );
 
 
-} catch (error) {
+} catch(error) {
 
-    console.log(
-        "Erro na conversão:"
+    console.error(
+        "Erro:",
+        error.message
     );
-
-    console.log(error.message);
 
 }
