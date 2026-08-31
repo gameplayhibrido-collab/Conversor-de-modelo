@@ -1,7 +1,9 @@
 name: Bedrock to GeckoLib Model Converter
 
 on:
-  workflow_dispatch:
+  push:
+    paths:
+      - "model.geo.json"
 
 jobs:
   convert:
