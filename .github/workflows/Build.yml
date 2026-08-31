@@ -1,4 +1,4 @@
-name: Bedrock to GeckoLib Converter
+name: Bedrock to GeckoLib Model Converter
 
 on:
   workflow_dispatch:
@@ -13,6 +13,8 @@ jobs:
 
       - name: Configurar Node.js
         uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
       - name: Executar conversor
         run: node converter.js
