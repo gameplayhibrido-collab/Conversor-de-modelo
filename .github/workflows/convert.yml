@@ -1,4 +1,4 @@
-name: Bedrock to GeckoLib Model Converter
+name: Bedrock to GeckoLib Converter
 
 on:
   push:
@@ -7,21 +7,26 @@ on:
 
 jobs:
   convert:
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Baixar arquivos do projeto
+
+      - name: Baixar arquivos
         uses: actions/checkout@v4
+
 
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+
       - name: Executar conversor
         run: node converter.js
 
-      - name: Enviar modelo convertido
+
+      - name: Criar download
         uses: actions/upload-artifact@v4
         with:
           name: GeckoLib-Model
